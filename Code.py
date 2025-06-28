@@ -35,7 +35,4 @@ def create_output(matrix):
 hidden_output=(create_output(hidden_value))
 
 final_value = np.dot(hidden_output, weights2)
-print(final_value)
 final_output = create_output(final_value)
-print(final_output)
-
