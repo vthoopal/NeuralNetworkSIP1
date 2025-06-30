@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
-weight1file = pd.read_excel(r"C:\Users\vedth\Desktop\sip\NeuralNetwork1\sip1\w1 (3 inputs - 11 nodes).xlsx")
+weight1file = pd.read_excel(r"C:\Users\vedth\Desktop\sip\NeuralNetwork1\sip1\w1 (3 inputs - 11 nodes).xlsx")#input to node weight
 weights1 = np.transpose(weight1file.to_numpy())
-correctfile = pd.read_excel(r"C:\Users\vedth\Desktop\sip\NeuralNetwork1\sip1\cross_data (3 inputs - 2 outputs).xlsx")
+correctfile = pd.read_excel(r"C:\Users\vedth\Desktop\sip\NeuralNetwork1\sip1\cross_data (3 inputs - 2 outputs).xlsx")#
 correct = correctfile.to_numpy()
 weight2file = pd.read_excel(r"C:\Users\vedth\Desktop\sip\NeuralNetwork1\sip1\w2 (from 11 to 2).xlsx")
 weights2 = np.transpose(weight2file.to_numpy())
@@ -22,6 +22,7 @@ def reformat(matrix):
     return bias
 bias1 =reformat(temp1)
 bias2=reformat(temp2)
+
 def activation(x):
     y = 1/(1+np.exp(-x))
     return y
@@ -44,13 +45,15 @@ def get_inputs(row):
     input_matrix =[x1,x2,x3]
     return input_matrix
 
-def calculate_outputError(true, product):
+def calculate_outputError(true, product, sumsquare):
     errorlist =[]
     for i in true:
-       e = ((i - product[true.index(i)]) * activation_derivative(product[true.index(i)]))
+       x = (i - product[true.index(i)])
+       sumsquare = sumsquare + x**2
+       e = x * activation_derivative(product[true.index(i)])
        e = (int(e*10000))/10000
        errorlist.append(e)
-    return errorlist
+    return errorlist, sumsquare
 
 def calculate_hiddenError(finError, outputs):
     hidList=[]
@@ -93,19 +96,29 @@ def updateHidden(error, row):
         bias1[error.index(x)] = bias1[error.index(x)]+ x*learningRate
         for y in input:
            z = weights1[input.index(y)][error.index(x)]
-           weights1[input.index(y)][error.index(x)] = z + learningRate*x*y
-
-    
+           weights1[input.index(y)][error.index(x)] = z + (learningRate*x*y)
 
 
-def iterate():
-    for i in range(314):
-        layer1, layer2= forward(i)
-        answer = get_correct(i)
-        errorO = calculate_outputError(answer, layer2)
-        errorH = calculate_hiddenError(errorO, layer1)
-        updateOutput(errorO, layer1)
-        updateHidden(errorH, i)
-        print(errorO)
-        print(errorH)
-iterate()
+def main():
+    #for n in range(1000):
+        SSE = 0
+        for i in range(314):
+            layer1, layer2= forward(i)
+            answer = get_correct(i)
+            errorO, SSE = calculate_outputError(answer, layer2, SSE)
+            errorH = calculate_hiddenError(errorO, layer1)
+            updateOutput(errorO, layer1)
+            updateHidden(errorH, i)
+            print(errorO)
+            print(errorH)
+       # n = n +1
+        SSE = 0
+        for i in range(314):
+            layer1, layer2= forward(i)
+            answer = get_correct(i)
+            errorO, SSE = calculate_outputError(answer, layer2, SSE)
+            errorH = calculate_hiddenError(errorO, layer1)
+        print(weights1)
+        print(weights2)
+        print(SSE)
+main()
