@@ -49,17 +49,17 @@ def calculate_outputError(true, product, sumsquare):
     errorlist =[]
     for i in true:
        x = (i - product[true.index(i)])
-       sumsquare = sumsquare + x**2 #calculates the sum of squared error
+       sumsquare = sumsquare +  x**2 #calculates the sum of squared error
        e = x * activation_derivative(product[true.index(i)]) #Output error = (correct answer - output)*(the activation derivative of output)
        errorlist.append(e)
     return errorlist, sumsquare
 
 def calculate_hiddenError(finError, outputs):
     hidList=[]
-    for y in outputs:
+    for y in outputs: 
         w=0
         for i in finError:
-            w = weights2[outputs.index(y)][finError.index(i)]*y + w #Hidden error = sum(Weights*corresponding output error)*activation derivative of hidden output
+            w = weights2[outputs.index(y)][finError.index(i)]*i + w #Hidden error = sum(Weights*corresponding output error)*activation derivative of hidden output
         hidError = w*activation_derivative(y)
         hidList.append(hidError)
     return hidList
@@ -99,6 +99,7 @@ def updateHidden(error, row):
 
 def main():
     #for n in range(1000): #Option for multiple epochs
+        SSE =0
         for i in range(314):#iterates over every set
             layer1, layer2= forward(i)
             answer = get_correct(i)
