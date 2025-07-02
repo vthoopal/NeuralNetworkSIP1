@@ -14,11 +14,11 @@ temp1 = np.transpose(bias1file.to_numpy())
 bias2file = pd.read_excel(r"C:\Users\vedth\Desktop\sip\NeuralNetwork1\sip1\b2 (2 output nodes).xlsx")
 temp2 = np.transpose(bias2file.to_numpy())
 
-def reformat(matrix):
+def reformat(matrix):#fixes the matrix
     bias =[]
     for x in matrix:
         for y in x:
-            bias.append((int(y*10000))/10000)
+            bias.append(y)
     return bias
 bias1 =reformat(temp1)
 bias2=reformat(temp2)
@@ -31,14 +31,14 @@ def activation_derivative(x):
     y = x*(1-x)
     return y
 
-def get_correct(row):
+def get_correct(row):#collects the correct output from the file
     list=[]
     C1 = correct[row][3]
     C2= correct[row][4]
     list=[C1,C2]
     return list
 
-def get_inputs(row):
+def get_inputs(row):#collects the inputs
     x1=correct[row][0]
     x2=correct[row][1]
     x3=correct[row][2]
@@ -49,9 +49,8 @@ def calculate_outputError(true, product, sumsquare):
     errorlist =[]
     for i in true:
        x = (i - product[true.index(i)])
-       sumsquare = sumsquare + x**2
-       e = x * activation_derivative(product[true.index(i)])
-       e = (int(e*10000))/10000
+       sumsquare = sumsquare + x**2 #calculates the sum of squared error
+       e = x * activation_derivative(product[true.index(i)]) #Output error = (correct answer - output)*(the activation derivative of output)
        errorlist.append(e)
     return errorlist, sumsquare
 
@@ -60,21 +59,20 @@ def calculate_hiddenError(finError, outputs):
     for y in outputs:
         w=0
         for i in finError:
-            w = weights2[outputs.index(y)][finError.index(i)] + w
+            w = weights2[outputs.index(y)][finError.index(i)]*y + w #Hidden error = sum(Weights*corresponding output error)*activation derivative of hidden output
         hidError = w*activation_derivative(y)
-        hidError =(int(hidError*10000)/10000)
         hidList.append(hidError)
     return hidList
 
 def create_output(matrix, bias):
     solve=[]
-    matrix = np.add(matrix, bias)
+    matrix = np.add(matrix, bias) #Adds bias
     for x in matrix:
-        solve.append((int(activation(x)*10000))/10000) 
+        solve.append(activation(x)) #runs the activation function for each value
     return solve
 
 def forward(row):
-    hidden_value = np.dot(get_inputs(row), weights1)
+    hidden_value = np.dot(get_inputs(row), weights1) #dot product of input and weight (not including bias)
     hidden_output=(create_output(hidden_value, bias1))
 
     final_value = np.dot(hidden_output, weights2)
@@ -83,10 +81,10 @@ def forward(row):
 
 def updateOutput(error, hiddenOutput):
     for i in error:
-        bias2[error.index(i)] = bias2[error.index(i)]+ i*learningRate
+        bias2[error.index(i)] = bias2[error.index(i)]+ i*learningRate #New bias = old bias + the error of that node * learning rate
         for y in hiddenOutput:
             x=weights2[hiddenOutput.index(y)][error.index(i)]
-            weights2[hiddenOutput.index(y)][error.index(i)] = x + (learningRate*i*y)
+            weights2[hiddenOutput.index(y)][error.index(i)] = x + (learningRate*i*y) #New weight = old weight + the error of that node * learning rate*the input from previous node
 
 def updateHidden(error, row):
     input=[]
@@ -100,9 +98,8 @@ def updateHidden(error, row):
 
 
 def main():
-    #for n in range(1000):
-        SSE = 0
-        for i in range(314):
+    #for n in range(1000): #Option for multiple epochs
+        for i in range(314):#iterates over every set
             layer1, layer2= forward(i)
             answer = get_correct(i)
             errorO, SSE = calculate_outputError(answer, layer2, SSE)
@@ -112,7 +109,7 @@ def main():
             print(errorO)
             print(errorH)
        # n = n +1
-        SSE = 0
+        SSE = 0 #calculate sse only after weights have been updated
         for i in range(314):
             layer1, layer2= forward(i)
             answer = get_correct(i)
