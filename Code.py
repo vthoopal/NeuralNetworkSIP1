@@ -10,7 +10,6 @@ learningRate = 0.7
 bias1file = pd.read_excel(r"C:\Users\vedth\Desktop\sip\NeuralNetwork1\sip1\b1 (11 nodes).xlsx")
 temp1 = np.transpose(bias1file.to_numpy())
 
-
 bias2file = pd.read_excel(r"C:\Users\vedth\Desktop\sip\NeuralNetwork1\sip1\b2 (2 output nodes).xlsx")
 temp2 = np.transpose(bias2file.to_numpy())
 
@@ -45,24 +44,30 @@ def get_inputs(row):#collects the inputs
     input_matrix =[x1,x2,x3]
     return input_matrix
 
+def activeDerivative_matrix(values):
+    x = len(values)
+    matrix = np.zeros((x,x))
+    for i in values:
+        matrix[values.index(i)][values.index(i)] = activation_derivative(i)  
+    return matrix
+
 def calculate_outputError(true, product, sumsquare):
     errorlist =[]
-    for i in true:
-       x = (i - product[true.index(i)])
-       sumsquare = sumsquare +  x**2 #calculates the sum of squared error
-       e = x * activation_derivative(product[true.index(i)]) #Output error = (correct answer - output)*(the activation derivative of output)
-       errorlist.append(e)
-    return errorlist, sumsquare
+    z =np.subtract(true,product)
+    y=activeDerivative_matrix( product)
+    errorlist = np.dot(z,y)
+    for i in errorlist:
+        sumsquare = sumsquare+(i**2)
+    return errorlist,sumsquare
 
 def calculate_hiddenError(finError, outputs):
+    x =np.transpose(finError)
+    Weight_sum = np.dot(weights2, x)
+    y = activeDerivative_matrix(outputs)
+    
     hidList=[]
-    for y in outputs: 
-        w=0
-        for i in finError:
-            w = weights2[outputs.index(y)][finError.index(i)]*i + w #Hidden error = sum(Weights*corresponding output error)*activation derivative of hidden output
-        hidError = w*activation_derivative(y)
-        hidList.append(hidError)
-    return hidList
+    hidList= np.dot(Weight_sum,y)
+    return(hidList) 
 
 def create_output(matrix, bias):
     solve=[]
@@ -79,44 +84,48 @@ def forward(row):
     final_output = create_output(final_value, bias2)
     return hidden_output, final_output
 
-def updateOutput(error, hiddenOutput):
-    for i in error:
-        bias2[error.index(i)] = bias2[error.index(i)]+ i*learningRate #New bias = old bias + the error of that node * learning rate
-        for y in hiddenOutput:
-            x=weights2[hiddenOutput.index(y)][error.index(i)]
-            weights2[hiddenOutput.index(y)][error.index(i)] = x + (learningRate*i*y) #New weight = old weight + the error of that node * learning rate*the input from previous node
+def updateOutput(error, hiddenOutput, bias, weight):
+        x =learningRate*error
+        bias = np.add(bias,x)
+        hiddenOutput =np.array([hiddenOutput])
+        y = np.transpose(hiddenOutput)
+        error =np.array([error])
+        z = learningRate*(np.dot(y,error))
+        weight = np.add(weight,z)
+        return bias,weight
 
-def updateHidden(error, row):
+def updateHidden(error, row, bias, weight):
     input=[]
     for i in range(3):
         input.append(correct[row][i])
-    for x in error:
-        bias1[error.index(x)] = bias1[error.index(x)]+ x*learningRate
-        for y in input:
-           z = weights1[input.index(y)][error.index(x)]
-           weights1[input.index(y)][error.index(x)] = z + (learningRate*x*y)
+    x = learningRate*error
+    input = np.array([input])
+    error = np.array([error])
+    bias = np.add(bias,x)
+    y = np.transpose(input)
+    z = learningRate*(np.dot(y,error))
+    weight = np.add(weight,z)
+    return bias,weight
 
 
-def main():
-    #for n in range(1000): #Option for multiple epochs
+def main(b1,b2,w1,w2):
+    for n in range(1): #Option for multiple epochs
         SSE =0
         for i in range(314):#iterates over every set
             layer1, layer2= forward(i)
             answer = get_correct(i)
             errorO, SSE = calculate_outputError(answer, layer2, SSE)
             errorH = calculate_hiddenError(errorO, layer1)
-            updateOutput(errorO, layer1)
-            updateHidden(errorH, i)
-            print(errorO)
-            print(errorH)
-       # n = n +1
-        SSE = 0 #calculate sse only after weights have been updated
-        for i in range(314):
-            layer1, layer2= forward(i)
-            answer = get_correct(i)
-            errorO, SSE = calculate_outputError(answer, layer2, SSE)
-            errorH = calculate_hiddenError(errorO, layer1)
-        print(weights1)
-        print(weights2)
-        print(SSE)
-main()
+            b2, w2 = updateOutput(errorO, layer1, b2, w2)
+            b1, w1 = updateHidden(errorH, i, b1, w1)
+           # print(errorO)
+           # print(errorH)
+        n = n +1
+    SSE = 0 #calculate sse only after weights have been updated
+    for i in range(314):
+        layer1, layer2= forward(i)
+        answer = get_correct(i)
+        errorO, SSE = calculate_outputError(answer, layer2, SSE)
+        errorH = calculate_hiddenError(errorO, layer1)
+    print(SSE)
+main(bias1,bias2,weights1,weights2)
